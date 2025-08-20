@@ -1,4 +1,4 @@
-const API_URL = 'https://your-backend-url.com/api';
+const API_URL = 'https://veer-is-live.onrender.com/api';
 
 function getDeviceID() {
   let deviceID = localStorage.getItem('deviceID');
