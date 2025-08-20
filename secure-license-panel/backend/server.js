@@ -4,12 +4,10 @@ const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
-const validateRoutes = require('./routes/validate');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/api', validateRoutes);
 
 // ✅ MongoDB URI ko environment variable se lo
 mongoose.connect(process.env.MONGO_URI, {
