@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const License = require('../models/license');
 const SECRET = require('dotenv').config();
+
 const SECRET = process.env.SECRET_KEY;
 const SECRET = 'YOUR_SECRET_KEY'; // JWT secret
 
