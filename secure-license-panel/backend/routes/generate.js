@@ -35,18 +35,7 @@ router.post('/generate', async (req, res) => {
         res.json({
             success: true,
             message: "✅ License generated successfully",
-            key: key,  // ⚠️ User ko original key hi milegi, hash nahi
-            expiryDate,
-            maxDevices
-        });
-
-    } catch (err) {
-        console.error("❌ Error in /generate:", err);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
-});
-
-module.exports = router;            key: key,  // ye user ko diya jaayega
+            key: key,  // ⚠️ Original key user ko return hogi
             expiryDate,
             maxDevices
         });
