@@ -1,40 +1,55 @@
 const express = require('express');
-const router = express.Router();
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
+const router = express.Router();
 const License = require('../models/license');
 
-// ✅ Render/Heroku me Environment Variable se SECRET_KEY lo
-const SECRET = process.env.SECRET_KEY || "fallback-secret-key";  
-
-// 🔑 License validate API
+// 🔑 Key validation
 router.post('/validate', async (req, res) => {
     try {
-        const { key, deviceID } = req.body;
+        const { key, deviceId } = req.body;
 
-        if(!key || !deviceID){
-            return res.status(400).json({ success: false, message: "Key aur DeviceID required hai" });
+        if (!key || !deviceId) {
+            return res.status(400).json({ success: false, message: "❌ Key aur DeviceID required hai" });
         }
 
-        // Key ka hash nikaalo
+        // Key ka hash nikalo
         const keyHash = crypto.createHash('sha256').update(key).digest('hex');
 
-        // DB me license check karo
+        // DB me check karo
         const license = await License.findOne({ keyHash });
-        if(!license){
-            return res.status(400).json({ success: false, message: 'Invalid Key' });
+        if (!license) {
+            return res.status(401).json({ success: false, message: "❌ Invalid License Key" });
         }
 
-        // Expiry check karo
-        if(license.expiryDate && license.expiryDate < new Date()){
-            return res.status(400).json({ success: false, message: 'Key expired' });
+        // Expiry check
+        if (license.expiresAt && new Date() > license.expiresAt) {
+            return res.status(403).json({ success: false, message: "❌ License expired" });
         }
 
-        // Device register karo
-        if(!license.usedDevices.includes(deviceID)) {
-            if(license.usedDevices.length >= license.maxDevices){
-                return res.status(400).json({ success: false, message: 'Device limit reached' });
+        // Device check
+        if (!license.devices.includes(deviceId)) {
+            if (license.devices.length >= license.maxDevices) {
+                return res.status(403).json({ success: false, message: "❌ Device limit reached" });
             }
+            license.devices.push(deviceId);
+            await license.save();
+        }
+
+        res.json({
+            success: true,
+            message: "✅ License valid",
+            userId: license.userId,
+            expiresAt: license.expiresAt,
+            devices: license.devices
+        });
+
+    } catch (err) {
+        console.error("❌ Error in /validate:", err);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+});
+
+module.exports = router;            }
             license.usedDevices.push(deviceID);
             await license.save();
         }
