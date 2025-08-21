@@ -3,10 +3,9 @@ const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const License = require('../models/license');
-const SECRET = require('dotenv').config();
 
-const SECRET = process.env.SECRET_KEY;
-const SECRET = 'YOUR_SECRET_KEY'; // JWT secret
+// ✅ Render/Heroku me Environment Variable se SECRET_KEY lo
+const SECRET = process.env.SECRET_KEY || "fallback-secret-key";  
 
 // 🔑 License validate API
 router.post('/validate', async (req, res) => {
