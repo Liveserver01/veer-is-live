@@ -3,32 +3,33 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 
-// In-memory storage (production me DB use karna)
-let licenses = [];
+let licenses = []; // in-memory (DB me save karna ho to mongoose use karna)
 
-// Generate License
+// 🔑 License Generate API
 router.post("/generate", (req, res) => {
-  const { key, deviceId } = req.body;
+  const { prefix, deviceId } = req.body;
 
-  if (!key || !deviceId) {
+  if (!prefix || !deviceId) {
     return res.status(400).json({
       success: false,
-      message: "❌ Key aur Device ID required hai",
+      message: "❌ Prefix aur Device ID required hai",
     });
   }
 
-  // Check agar deviceId already registered hai
-  const existing = licenses.find((l) => l.deviceId === deviceId);
+  // random string generate
+  const randomPart = crypto.randomBytes(6).toString("hex").toUpperCase(); // 12 chars
+  const key = `${prefix}-${randomPart}`;
 
+  // check agar device already registered hai
+  const existing = licenses.find((l) => l.deviceId === deviceId);
   if (existing) {
     return res.json({
       success: true,
-      message: "ℹ️ Device ke liye license already exist karta hai",
+      message: "ℹ️ Device already licensed hai",
       key: existing.key,
     });
   }
 
-  // New license banate hain
   const newLicense = {
     key,
     deviceId,
@@ -44,7 +45,7 @@ router.post("/generate", (req, res) => {
   });
 });
 
-// Verify License
+// 🔎 Verify License API
 router.post("/verify", (req, res) => {
   const { key, deviceId } = req.body;
 
