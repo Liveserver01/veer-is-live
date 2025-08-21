@@ -9,7 +9,11 @@ const generateRoutes = require('./routes/generate');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/api/auth', generateRoutes);
+
+// ✅ Routes sahi tarike se mount karo
+app.use('/api/license', generateRoutes);   // License generate ke liye
+app.use('/api/auth', authRoutes);          // Auth / validate ke liye
+app.use('/api/dashboard', dashboardRoutes);
 
 // ✅ MongoDB connect
 mongoose.connect(process.env.MONGO_URI, {
@@ -18,10 +22,6 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => console.log("✅ MongoDB Connected"))
 .catch(err => console.error("❌ MongoDB Error:", err));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
 
 // ✅ Port setup
 const PORT = process.env.PORT || 5000;
