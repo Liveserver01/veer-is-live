@@ -1,32 +1,33 @@
 const express = require('express');
-const router = express.Router();
 const crypto = require('crypto');
+const router = express.Router();
 const License = require('../models/license');
 
-// 🔐 Key generate API (Admin use)
+// 🔐 Key generate API (Admin use only)
 router.post('/generate', async (req, res) => {
     try {
-        const { key, expiryDate, maxDevices } = req.body;
+        const { key, expiryDate, maxDevices, userId } = req.body;
 
-        if (!key) {
-            return res.status(400).json({ success: false, message: "Key required hai" });
+        if (!key || !userId) {
+            return res.status(400).json({ success: false, message: "❌ Key aur UserID required hai" });
         }
 
-        // Key ka hash nikaalo
+        // 🔑 Hash nikalo
         const keyHash = crypto.createHash('sha256').update(key).digest('hex');
 
-        // Pehle se same key exist to nahi?
+        // Duplicate key check
         const existing = await License.findOne({ keyHash });
         if (existing) {
-            return res.status(400).json({ success: false, message: "Key already exists" });
+            return res.status(400).json({ success: false, message: "❌ Key already exists" });
         }
 
-        // License save karo
+        // Save in DB
         const license = new License({
             keyHash,
-            expiryDate: expiryDate ? new Date(expiryDate) : null,
+            userId,
+            expiresAt: expiryDate ? new Date(expiryDate) : null,
             maxDevices: maxDevices || 1,
-            usedDevices: []
+            devices: []
         });
 
         await license.save();
@@ -34,7 +35,18 @@ router.post('/generate', async (req, res) => {
         res.json({
             success: true,
             message: "✅ License generated successfully",
-            key: key,  // ye user ko diya jaayega
+            key: key,  // ⚠️ User ko original key hi milegi, hash nahi
+            expiryDate,
+            maxDevices
+        });
+
+    } catch (err) {
+        console.error("❌ Error in /generate:", err);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+});
+
+module.exports = router;            key: key,  // ye user ko diya jaayega
             expiryDate,
             maxDevices
         });
