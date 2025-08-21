@@ -1,30 +1,34 @@
+// routes/generate.js
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const License = require('../models/license');
 
-// 🔐 Key generate API (Admin use only)
+// 🔐 License Generate API (Admin use only)
 router.post('/generate', async (req, res) => {
     try {
-        const { key, expiryDate, maxDevices, userId } = req.body;
+        const { prefix, expiryDate, maxDevices } = req.body;
 
-        if (!key || !userId) {
-            return res.status(400).json({ success: false, message: "❌ Key aur UserID required hai" });
+        if (!prefix) {
+            return res.status(400).json({ success: false, message: "❌ Prefix required hai" });
         }
 
-        // 🔑 Hash nikalo
+        // 🔑 Random key banaye
+        const randomPart = crypto.randomBytes(6).toString("hex").toUpperCase();
+        const key = `${prefix}-${randomPart}`;
+
+        // Key hash
         const keyHash = crypto.createHash('sha256').update(key).digest('hex');
 
-        // Duplicate key check
+        // Duplicate check
         const existing = await License.findOne({ keyHash });
         if (existing) {
-            return res.status(400).json({ success: false, message: "❌ Key already exists" });
+            return res.status(400).json({ success: false, message: "❌ Key already exists, dobara try karo" });
         }
 
         // Save in DB
         const license = new License({
             keyHash,
-            userId,
             expiresAt: expiryDate ? new Date(expiryDate) : null,
             maxDevices: maxDevices || 1,
             devices: []
@@ -35,7 +39,7 @@ router.post('/generate', async (req, res) => {
         res.json({
             success: true,
             message: "✅ License generated successfully",
-            key: key,  // ⚠️ Original key user ko return hogi
+            key: key,  // ⚠️ Original key return hoga
             expiryDate,
             maxDevices
         });
