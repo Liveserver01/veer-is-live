@@ -1,21 +1,26 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+require('dotenv').config();
+
+const authMiddleware = require('./middlewares/auth');  // ✅ yaha se auth middleware import
 
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const generateRoutes = require('./routes/generate');
-const verifyRoutes = require('./routes/verify');   // ✅ Add this
+const verifyRoutes = require('./routes/verify');   
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Routes
-app.use('/api/license', generateRoutes);   // License generate ke liye
-app.use('/api/auth', authRoutes);          // Auth / validate ke liye
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/verify', verifyRoutes);      // ✅ Verify route
+// ✅ Protected Routes (sirf admin ke liye)
+app.use('/api/license', authMiddleware, generateRoutes);
+app.use('/api/auth', authMiddleware, authRoutes);
+app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+
+// ✅ Public Route (apps ke liye)
+app.use('/api/verify', verifyRoutes);      
 
 // ✅ MongoDB connect
 mongoose.connect(process.env.MONGO_URI, {
