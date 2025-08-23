@@ -5,15 +5,17 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const generateRoutes = require('./routes/generate');
+const verifyRoutes = require('./routes/verify');   // ✅ Add this
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Routes sahi tarike se mount karo
+// ✅ Routes
 app.use('/api/license', generateRoutes);   // License generate ke liye
 app.use('/api/auth', authRoutes);          // Auth / validate ke liye
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/verify', verifyRoutes);      // ✅ Verify route
 
 // ✅ MongoDB connect
 mongoose.connect(process.env.MONGO_URI, {
