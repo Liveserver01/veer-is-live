@@ -41,7 +41,11 @@ router.post('/verify', async (req, res) => {
             success: true,
             message: "✅ License valid hai",
             expiresAt: license.expiresAt,
-            devices: license.devices
+            devices: license.devices,
+            usedDevices: license.devices.length,
+            maxDevices: license.maxDevices,
+            remainingDevices: license.maxDevices - 
+        license.devices.length
         });
 
     } catch (err) {
