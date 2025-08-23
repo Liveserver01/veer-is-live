@@ -1,97 +1,57 @@
-const express = require("express");
+// routes/license.js
+const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
-const crypto = require("crypto");
-const License = require("../models/license"); // ✅ Models se schema import
+const License = require('../models/license');
 
-// 🔑 License Generate
-router.post("/generate", async (req, res) => {
-  try {
-    const { prefix, deviceId, days } = req.body;
+// 🎯 License Generate API
+router.post('/generate', async (req, res) => {
+    try {
+        const { prefix, deviceId, days, maxDevices } = req.body;
 
-    if (!prefix || !deviceId) {
-      return res.status(400).json({
-        success: false,
-        message: "❌ Prefix aur Device ID required hai",
-      });
+        if (!prefix || !deviceId || !days) {
+            return res.status(400).json({ success: false, message: "❌ prefix, deviceId aur days required hai" });
+        }
+
+        // 1. Random license key generate karo
+        const rawKey = `${prefix}-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+
+        // 2. Hash the key
+        const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+
+        // 3. Expiry date set
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + parseInt(days));
+
+        // 4. Check duplicate
+        const exists = await License.findOne({ keyHash });
+        if (exists) {
+            return res.status(400).json({ success: false, message: "❌ Key already exists, dobara try karo" });
+        }
+
+        // 5. Save to DB
+        const license = new License({
+            keyHash,
+            devices: [deviceId],
+            maxDevices: maxDevices || 1,
+            expiresAt
+        });
+
+        await license.save();
+
+        // 6. Response
+        res.json({
+            success: true,
+            message: "✅ License generate ho gaya",
+            licenseKey: rawKey,  // ⚠️ Ye user ko dikhana hai, DB me hash save hota hai
+            expiresAt,
+            maxDevices: license.maxDevices
+        });
+
+    } catch (err) {
+        console.error("❌ License generate error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
     }
-
-    // Device already licensed hai?
-    let existing = await License.findOne({ deviceId });
-    if (existing) {
-      return res.json({
-        success: true,
-        message: "ℹ️ Device already licensed hai",
-        key: existing.key,
-        expiresAt: existing.expiresAt || null,
-      });
-    }
-
-    // Random key generate
-    const randomPart = crypto.randomBytes(6).toString("hex").toUpperCase(); // 12 chars
-    const key = `${prefix}-${randomPart}`;
-
-    // Expiry calculate
-    let expiresAt = null;
-    if (days && Number(days) > 0) {
-      expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + Number(days));
-    }
-
-    // DB me save
-    const newLicense = new License({
-      key,
-      prefix,
-      deviceId,
-      expiresAt,
-    });
-
-    await newLicense.save();
-
-    res.json({
-      success: true,
-      message: "✅ License generated successfully",
-      key: newLicense.key,
-      expiresAt,
-    });
-  } catch (err) {
-    console.error("❌ Error in /generate:", err);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-});
-
-// 🔎 Verify License
-router.post("/verify", async (req, res) => {
-  try {
-    const { key, deviceId } = req.body;
-
-    const license = await License.findOne({ key, deviceId });
-
-    if (!license) {
-      return res.status(400).json({
-        success: false,
-        message: "❌ Invalid license or device",
-      });
-    }
-
-    // expiry check
-    if (license.expiresAt && new Date() > license.expiresAt) {
-      return res.status(400).json({
-        success: false,
-        message: "⏳ License expired ho gaya",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "✅ License valid hai",
-      key: license.key,
-      prefix: license.prefix,
-      expiresAt: license.expiresAt || null,
-    });
-  } catch (err) {
-    console.error("❌ Error in /verify:", err);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
 });
 
 module.exports = router;
