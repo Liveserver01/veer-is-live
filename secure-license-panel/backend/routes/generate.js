@@ -28,6 +28,7 @@ router.post('/generate', async (req, res) => {
 
         // Save in DB
         const license = new License({
+            prefix,
             keyHash,
             expiresAt: expiryDate ? new Date(expiryDate) : null,
             maxDevices: maxDevices || 1,
