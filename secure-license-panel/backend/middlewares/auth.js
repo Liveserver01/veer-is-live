@@ -1,5 +1,4 @@
 // middlewares/auth.js
-require('dotenv').config();
 
 function basicAuth(req, res, next) {
     const authHeader = req.headers['authorization'];
