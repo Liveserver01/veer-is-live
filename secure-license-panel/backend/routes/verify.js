@@ -5,7 +5,7 @@ const router = express.Router();
 const License = require('../models/license');
 
 // 🔎 License Verify API
-router.post('/verify', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { key, deviceId } = req.body;
 
@@ -44,8 +44,7 @@ router.post('/verify', async (req, res) => {
             devices: license.devices,
             usedDevices: license.devices.length,
             maxDevices: license.maxDevices,
-            remainingDevices: license.maxDevices - 
-        license.devices.length
+            remainingDevices: license.maxDevices - license.devices.length
         });
 
     } catch (err) {
