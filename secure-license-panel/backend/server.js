@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const authMiddleware = require('./middlewares/auth');  // ✅ yaha se auth middleware import
+const authMiddleware = require('./middleware/auth');  // ✅ yaha se auth middleware import
 
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
