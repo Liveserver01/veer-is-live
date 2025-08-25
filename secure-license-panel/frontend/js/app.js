@@ -24,15 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const deviceID = getDeviceID();
 
       try {
-        const res = await fetch(`${API_URL}/auth/validate`, {
+        // ✅ yaha /verify use kiya hai, /auth/validate nahi
+        const res = await fetch(`${API_URL}/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key, deviceID })
         });
         const data = await res.json();
 
-        if (res.ok) {
-          localStorage.setItem('token', data.token);
+        if (res.ok && data.success) {
+          localStorage.setItem('token', data.token || key); // agar token nahi aata to key hi store kar lo
           window.location.href = 'dashboard.html';
         } else {
           status.innerText = data.message || "Invalid license key!";
